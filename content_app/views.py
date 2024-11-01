@@ -1,6 +1,7 @@
 from django.shortcuts import render
 
-from rest_framework import viewsets
+from rest_framework import viewsets, filters
+from django_filters.rest_framework import DjangoFilterBackend
 from .models import Content
 from .serializers import ContentSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -14,12 +15,16 @@ class ContentViewSet(viewsets.ModelViewSet):
     serializer_class = ContentSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    search_fields = ['title']
+    filterset_fields = ['content_type'] 
 
     def perform_create(self, serializer):
         # Verifica se o usuário pertence ao grupo 'Content Creator'
         if not self.request.user.groups.filter(name='Content Creator').exists():
             raise PermissionDenied("Apenas usuários com permissão de criador de conteúdo podem fazer uploads.")
         serializer.save(user=self.request.user)
+    
 
 
 
