@@ -7,21 +7,26 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework import viewsets, permissions
 from .models import Playlist
 from .serializers import PlaylistSerializer
+from rest_framework.exceptions import PermissionDenied
 
 class ContentViewSet(viewsets.ModelViewSet):
     queryset = Content.objects.all()
     serializer_class = ContentSerializer
-    #permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
 
-    #def perform_create(self, serializer):
-     #   serializer.save(creator=self.request.user)# Create your views here.
+    def perform_create(self, serializer):
+        # Verifica se o usuário pertence ao grupo 'Content Creator'
+        if not self.request.user.groups.filter(name='Content Creator').exists():
+            raise PermissionDenied("Apenas usuários com permissão de criador de conteúdo podem fazer uploads.")
+        serializer.save(user=self.request.user)
 
 
 
 class PlaylistViewSet(viewsets.ModelViewSet):
     queryset = Playlist.objects.all()
     serializer_class = PlaylistSerializer
-    #permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

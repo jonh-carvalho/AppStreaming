@@ -1,11 +1,20 @@
 from rest_framework import serializers
 from .models import Content
 from .models import Playlist
+import os
 
 class ContentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Content
         fields = '__all__'
+    
+    def validate_file_url(self, value):
+        # Verifica a extensão do arquivo
+        ext = os.path.splitext(value.name)[-1].lower()
+        valid_extensions = ['.mp4', '.mp3']
+        if ext not in valid_extensions:
+            raise serializers.ValidationError("O conteúdo deve estar nos formatos .mp4 ou .mp3.")
+        return value
         
 class PlaylistSerializer(serializers.ModelSerializer):
     contents = ContentSerializer(many=True, read_only=True)
